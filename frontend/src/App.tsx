@@ -1,4 +1,4 @@
-import { BrowserRouter, Link } from 'react-router-dom'
+import { BrowserRouter, NavLink } from 'react-router-dom'
 import AppRoutes from './routes/AppRoutes.tsx'
 
 function App() {
@@ -7,8 +7,10 @@ function App() {
       <header className="app-header">
         <h1>User Management Dashboard</h1>
         <nav className="app-nav">
-          <Link to="/">Dashboard</Link>
-          <Link to="/users/new">Create User</Link>
+          <NavLink to="/" end>
+            Dashboard
+          </NavLink>
+          <NavLink to="/users/new">Create User</NavLink>
         </nav>
       </header>
       <AppRoutes />

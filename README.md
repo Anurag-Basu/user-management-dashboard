@@ -1,46 +1,36 @@
 # User Management Dashboard
 
-Full-stack web app for adding, viewing, editing, and deleting users.
+Full-stack app for adding, viewing, editing, and deleting users.
 
-## Tech stack
+## How to run
 
-- Frontend: React.js (Vite + TypeScript), React Router, Axios
-- Backend: Node.js, Express.js, TypeScript
-- Database: MongoDB with Mongoose
+You need **Node.js 20+** and **npm**. Run the backend and frontend in two terminals.
 
-## Folder structure
+### 1. Backend
 
-```
-user-management-dashboard/
-├── frontend/
-│   └── src/
-│       ├── components/
-│       ├── pages/
-│       ├── services/
-│       ├── hooks/
-│       ├── routes/
-│       └── utils/
-│
-├── backend/
-│   └── src/
-│       ├── controllers/
-│       ├── routes/
-│       ├── models/
-│       ├── middleware/
-│       ├── validators/
-│       └── config/
-│
-└── README.md
+```bash
+cd backend
+npm install
+cp .env.example .env
 ```
 
-## Setup instructions
+Edit `backend/.env` and set your MongoDB connection string:
 
-### Prerequisites
+```
+PORT=4000
+MONGODB_DB_NAME=user_management
+MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/user_management
+```
 
-- Node.js 20+
-- npm
+Then start the API:
 
-### Frontend
+```bash
+npm run dev
+```
+
+Backend runs at http://localhost:4000
+
+### 2. Frontend
 
 ```bash
 cd frontend
@@ -48,18 +38,55 @@ npm install
 npm run dev
 ```
 
-Frontend runs at http://localhost:5173
+Open http://localhost:5173
 
-### Backend
+The Vite dev server proxies `/api` to the backend, so keep both processes running.
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run dev
-```
+## Features
 
-Backend runs at http://localhost:4000
+- Dashboard with search, pagination (10 users per page), view, edit, and delete
+- Create and edit forms with client-side validation
+- User details page
+- REST API with server-side validation, duplicate-email checks, and error handling
+- MongoDB Atlas (database `user_management`, collection `users`)
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard with user list, search, and pagination](frontend/public/dashboard.png)
+
+### Create user
+
+![Create user form](frontend/public/create-user.png)
+
+### User details
+
+![User details page](frontend/public/view-user.png)
+
+### Edit user
+
+![Edit user form](frontend/public/edit-user.png)
+
+### Delete user
+
+![Delete user confirmation dialog](frontend/public/delete-user.png)
+
+## Tech stack
+
+- **Frontend:** React, Vite, TypeScript, React Router, Axios
+- **Backend:** Node.js, Express, TypeScript
+- **Database:** MongoDB with Mongoose
+
+## Environment variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `4000` | Backend port |
+| `MONGODB_DB_NAME` | `user_management` | MongoDB database name |
+| `MONGODB_URI` | `mongodb://localhost:27017/user_management` | MongoDB connection string |
+
+Do not commit `backend/.env`. Use `.env.example` as a template.
 
 ## Frontend routes
 
@@ -70,14 +97,47 @@ Backend runs at http://localhost:4000
 | `/users/:id` | User details |
 | `/users/:id/edit` | Edit user |
 
-## Backend API routes
+## API
+
+User fields: `name`, `email`, `phone`, `company`, and `address` (`street`, `city`, `zipcode`, `geo.lat`, `geo.lng`).
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `/api/users` | Return all users |
-| GET | `/api/users/:id` | Return a single user by ID |
-| POST | `/api/users` | Create a new user |
-| PUT | `/api/users/:id` | Update a user |
-| DELETE | `/api/users/:id` | Delete a user |
+| `GET` | `/api/users` | Paginated users. Query: `page`, `limit` (default 10), `q` (search) |
+| `GET` | `/api/users/:id` | One user |
+| `POST` | `/api/users` | Create a user |
+| `PUT` | `/api/users/:id` | Update a user |
+| `DELETE` | `/api/users/:id` | Delete a user |
 
-Feature implementation is not included yet.
+`GET /api/users` response:
+
+```json
+{
+  "users": [],
+  "total": 0,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 0
+}
+```
+
+## Folder structure
+
+```
+user-management-dashboard/
+├── frontend/src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── hooks/
+│   ├── routes/
+│   └── utils/
+├── backend/src/
+│   ├── controllers/
+│   ├── routes/
+│   ├── models/
+│   ├── middleware/
+│   ├── validators/
+│   └── config/
+└── README.md
+```

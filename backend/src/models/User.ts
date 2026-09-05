@@ -26,7 +26,7 @@ const userSchema = new Schema(
     company: { type: String, required: true, trim: true },
     address: { type: addressSchema, required: true },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'users' },
 )
 
 userSchema.virtual('id').get(function () {

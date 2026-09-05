@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog.tsx'
+import Pagination from '../components/Pagination.tsx'
 import UserList from '../components/UserList.tsx'
 import { useUsers } from '../hooks/useUsers.ts'
 import { deleteUser } from '../services/users.ts'
@@ -8,25 +9,41 @@ import type { User } from '../types/user.ts'
 import { getUserId } from '../types/user.ts'
 import { getErrorMessage } from '../utils/errors.ts'
 
+const PAGE_SIZE = 10
+
 function Dashboard() {
-  const { users, loading, error, refetch } = useUsers()
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const { users, total, totalPages, loading, error, refetch } = useUsers({
+    page,
+    limit: PAGE_SIZE,
+    query: debouncedQuery,
+  })
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  const filteredUsers = useMemo(() => {
-    const term = query.trim().toLowerCase()
-    if (!term) {
-      return users
-    }
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedQuery(query.trim())
+    }, 300)
 
-    return users.filter((user) =>
-      [user.name, user.email, user.phone, user.company, user.address?.city]
-        .filter((value): value is string => Boolean(value))
-        .some((value) => value.toLowerCase().includes(term)),
-    )
-  }, [users, query])
+    return () => window.clearTimeout(timeout)
+  }, [query])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedQuery])
+
+  useEffect(() => {
+    if (!loading && totalPages > 0 && page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [loading, page, totalPages])
+
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(page * PAGE_SIZE, total)
 
   async function handleConfirmDelete() {
     if (!userToDelete) {
@@ -39,7 +56,12 @@ function Dashboard() {
     try {
       await deleteUser(getUserId(userToDelete))
       setUserToDelete(null)
-      await refetch()
+
+      if (users.length === 1 && page > 1) {
+        setPage(page - 1)
+      } else {
+        await refetch()
+      }
     } catch (err) {
       setActionError(getErrorMessage(err))
     } finally {
@@ -71,7 +93,11 @@ function Dashboard() {
             />
           </label>
           <p className="muted count">
-            {loading ? 'Loading...' : `${filteredUsers.length} of ${users.length} users`}
+            {loading
+              ? 'Loading...'
+              : total === 0
+                ? '0 users'
+                : `Showing ${rangeStart}-${rangeEnd} of ${total} users`}
           </p>
         </div>
 
@@ -80,10 +106,13 @@ function Dashboard() {
 
         {loading ? (
           <p className="empty-state">Loading users...</p>
-        ) : !error && users.length === 0 ? (
+        ) : !error && total === 0 && !debouncedQuery ? (
           <p className="empty-state">No users yet. Create the first one to get started.</p>
         ) : !error ? (
-          <UserList users={filteredUsers} onDelete={setUserToDelete} />
+          <>
+            <UserList users={users} onDelete={setUserToDelete} />
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
         ) : null}
       </section>
 
